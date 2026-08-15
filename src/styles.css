@@ -59,6 +59,12 @@ main { overflow: hidden; }
 .film-caption p { margin: 0 0 12px; font-size: 9px; letter-spacing: .24em; opacity: .64; }
 .film-caption h1 { margin: 0; font-family: "STSong", "SimSun", serif; font-size: clamp(62px, 8vw, 124px); font-weight: 400; line-height: .85; letter-spacing: -.08em; text-shadow: 0 2px 25px rgba(0,0,0,.25); }
 .film-caption > span { display: block; margin-top: 18px; font-size: 9px; letter-spacing: .32em; opacity: .7; }
+.scroll-cue { position: absolute; z-index: 5; left: 50%; bottom: 88px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 7px; color: #f2f0e8; opacity: .7; transition: opacity .25s ease; }
+.scroll-cue:hover { opacity: 1; }
+.scroll-cue small { font-size: 7px; letter-spacing: .24em; }
+.scroll-cue-icon { position: relative; width: 30px; height: 30px; border: 1px solid rgba(255,255,255,.42); border-radius: 50%; background: rgba(0,0,0,.12); backdrop-filter: blur(8px); }
+.scroll-cue-icon::before { content: ""; position: absolute; left: 50%; top: 7px; width: 6px; height: 6px; border-right: 1px solid var(--acid); border-bottom: 1px solid var(--acid); transform: translateX(-50%) rotate(45deg); animation: scrollCue 1.25s ease-in-out infinite alternate; }
+@keyframes scrollCue { to { top: 13px; opacity: .45; } }
 .carousel-bar { position: absolute; z-index: 5; left: 3.2vw; right: 3.2vw; bottom: 27px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.3); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
 .carousel-bar > p { margin: 0; font-size: 8px; letter-spacing: .25em; opacity: .62; }
 .carousel-dots { display: flex; align-items: center; gap: 18px; }
@@ -160,6 +166,8 @@ footer { background: var(--acid); padding: 8vw 4vw 2vw; }
   .film-caption { left: 20px; bottom: 116px; }
   .film-caption h1 { font-size: clamp(58px, 19vw, 92px); }
   .carousel-bar { left: 20px; right: 20px; grid-template-columns: auto 1fr; }
+  .scroll-cue { bottom: 87px; }
+  .scroll-cue small { display: none; }
   .carousel-bar > p { display: none; }
   .carousel-dots { justify-self: start; }
   .sound-control { min-width: 118px; padding: 0 12px; }
@@ -209,5 +217,6 @@ footer { background: var(--acid); padding: 8vw 4vw 2vw; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .sound-bars i { animation: none; }
+  .scroll-cue-icon::before { animation: none; top: 10px; }
   *, *::before, *::after { transition-duration: .01ms !important; }
 }

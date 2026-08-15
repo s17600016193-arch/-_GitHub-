@@ -10,7 +10,8 @@ const films = [
 
 export function HeroCarousel() {
   const [active, setActive] = useState(0);
-  const [muted, setMuted] = useState(false);
+  // Mobile browsers only permit reliable autoplay when media starts muted.
+  const [muted, setMuted] = useState(true);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [interlude, setInterlude] = useState(false);
   const [heroMostlyVisible, setHeroMostlyVisible] = useState(true);
@@ -128,6 +129,11 @@ export function HeroCarousel() {
         <h1>{films[active].title}</h1>
         <span>{films[active].subtitle}</span>
       </div>
+
+      <a className="scroll-cue" href="#manifesto" aria-label="向下浏览">
+        <span className="scroll-cue-icon" aria-hidden="true" />
+        <small>SCROLL</small>
+      </a>
 
       <div className="carousel-bar">
         <p>{interlude ? "WILD FIELD STUDIO · 05 SEC" : "SELECTED WORKS · 2026"}</p>
