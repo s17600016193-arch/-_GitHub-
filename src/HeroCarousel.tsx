@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const films = [
-  { title: "黑拳", subtitle: "BLACK FIST", src: "/videos/hei-quan.mp4" },
+  { title: "忘川拳场", subtitle: "FORGOTTEN RIVER ARENA", src: "/videos/hei-quan.mp4" },
   { title: "楼道回响", subtitle: "ECHOES IN THE HALL", src: "/videos/lou-dao-hui-xiang.mp4" },
   { title: "卯蚀", subtitle: "MAO ECLIPSE", src: "/videos/mao-shi.mp4" },
 ];
@@ -11,7 +11,7 @@ const films = [
 const wechatInlinePlaybackAttributes = {
   "webkit-playsinline": "true",
   "x5-playsinline": "true",
-  "x5-video-player-type": "h5-page",
+  "x5-video-player-type": "h5",
   "x5-video-player-fullscreen": "false",
 } as Record<string, string>;
 
@@ -87,11 +87,24 @@ export function HeroCarousel() {
     const resumeAfterWeChatReady = () => {
       const current = videoRef.current;
       if (!current || interlude || !heroMostlyVisible) return;
+      const bridge = (window as Window & {
+        WeixinJSBridge?: {
+          invoke?: (method: string, options: Record<string, never>, callback: () => void) => void;
+        };
+      }).WeixinJSBridge;
+
+      if (bridge?.invoke) {
+        bridge.invoke("getNetworkType", {}, () => {
+          void attemptPlayback(current, true);
+        });
+        return;
+      }
+
       void attemptPlayback(current, true);
     };
 
     document.addEventListener("WeixinJSBridgeReady", resumeAfterWeChatReady);
-    if ("WeixinJSBridge" in window) resumeAfterWeChatReady();
+    resumeAfterWeChatReady();
     return () => document.removeEventListener("WeixinJSBridgeReady", resumeAfterWeChatReady);
   }, [active, attemptPlayback, heroMostlyVisible, interlude]);
 

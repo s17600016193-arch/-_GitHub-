@@ -13,7 +13,7 @@ type Work = {
 };
 
 const landscapeWorks: Work[] = [
-  { no: "01", title: "黑拳", en: "BLACK FIST", meta: "动作漫剧 · 16:9", src: "/videos/hei-quan.mp4", poster: "/posters/hei-quan-final.jpg", orientation: "landscape" },
+  { no: "01", title: "忘川拳场", en: "FORGOTTEN RIVER ARENA", meta: "动作漫剧 · 16:9", src: "/videos/hei-quan.mp4", poster: "/posters/hei-quan-final.jpg", orientation: "landscape" },
   { no: "02", title: "楼道回响", en: "ECHOES IN THE HALL", meta: "悬疑漫剧 · 16:9", src: "/videos/lou-dao-hui-xiang.mp4", poster: "/posters/lou-dao-hui-xiang.jpg", orientation: "landscape" },
   { no: "03", title: "卯蚀", en: "MAO ECLIPSE", meta: "科幻漫剧 · 16:9", src: "/videos/mao-shi.mp4", poster: "/posters/mao-shi-final.jpg", orientation: "landscape" },
 ];
