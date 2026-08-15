@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const films = [
   { title: "黑拳", subtitle: "BLACK FIST", src: "/videos/hei-quan.mp4" },
@@ -8,15 +8,51 @@ const films = [
   { title: "卯蚀", subtitle: "MAO ECLIPSE", src: "/videos/mao-shi.mp4" },
 ];
 
+const wechatInlinePlaybackAttributes = {
+  "webkit-playsinline": "true",
+  "x5-playsinline": "true",
+  "x5-video-player-type": "h5-page",
+  "x5-video-player-fullscreen": "false",
+} as Record<string, string>;
+
 export function HeroCarousel() {
   const [active, setActive] = useState(0);
   // Mobile browsers only permit reliable autoplay when media starts muted.
   const [muted, setMuted] = useState(true);
-  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
+  const [needsPlayGesture, setNeedsPlayGesture] = useState(false);
   const [interlude, setInterlude] = useState(false);
   const [heroMostlyVisible, setHeroMostlyVisible] = useState(true);
   const heroRef = useRef<HTMLElement | null>(null);
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+
+  const attemptPlayback = useCallback(async (video: HTMLVideoElement, forceMuted = false) => {
+    video.volume = 0.12;
+    if (forceMuted) {
+      video.muted = true;
+      video.setAttribute("muted", "");
+      setMuted(true);
+    }
+
+    try {
+      await video.play();
+      setNeedsPlayGesture(false);
+      return;
+    } catch {
+      if (!video.muted) {
+        video.muted = true;
+        video.setAttribute("muted", "");
+        setMuted(true);
+        try {
+          await video.play();
+          setNeedsPlayGesture(false);
+          return;
+        } catch {
+          // Some WeChat WebViews still require a real touch gesture.
+        }
+      }
+      setNeedsPlayGesture(true);
+    }
+  }, []);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -54,23 +90,44 @@ export function HeroCarousel() {
       return;
     }
 
-    const attempt = current.play();
-    if (attempt) {
-      attempt.catch(() => {
-        current.muted = true;
-        setMuted(true);
-        setAutoplayBlocked(true);
-        void current.play();
-      });
-    }
-  }, [active, interlude, heroMostlyVisible]);
+    current.muted = muted;
+    void attemptPlayback(current);
+    const fallbackTimer = window.setTimeout(() => {
+      if (current.paused && !interlude && heroMostlyVisible) setNeedsPlayGesture(true);
+    }, 2200);
+    return () => window.clearTimeout(fallbackTimer);
+  }, [active, attemptPlayback, heroMostlyVisible, interlude, muted]);
+
+  useEffect(() => {
+    const resumeAfterWeChatReady = () => {
+      const current = videoRefs.current[active];
+      if (!current || interlude || !heroMostlyVisible) return;
+      void attemptPlayback(current, true);
+    };
+
+    document.addEventListener("WeixinJSBridgeReady", resumeAfterWeChatReady);
+    if ("WeixinJSBridge" in window) resumeAfterWeChatReady();
+    return () => document.removeEventListener("WeixinJSBridgeReady", resumeAfterWeChatReady);
+  }, [active, attemptPlayback, heroMostlyVisible, interlude]);
+
+  useEffect(() => {
+    if (!needsPlayGesture) return;
+    const resumeOnFirstTouch = () => {
+      const current = videoRefs.current[active];
+      if (!current || interlude || !heroMostlyVisible) return;
+      void attemptPlayback(current, true);
+    };
+
+    document.addEventListener("touchstart", resumeOnFirstTouch, { once: true, passive: true });
+    return () => document.removeEventListener("touchstart", resumeOnFirstTouch);
+  }, [active, attemptPlayback, heroMostlyVisible, interlude, needsPlayGesture]);
 
   useEffect(() => {
     if (!interlude) return;
     const timer = window.setTimeout(() => {
       setActive((current) => (current + 1) % films.length);
       setInterlude(false);
-      setAutoplayBlocked(false);
+      setNeedsPlayGesture(false);
     }, 5000);
     return () => window.clearTimeout(timer);
   }, [interlude]);
@@ -80,19 +137,24 @@ export function HeroCarousel() {
     if (selected) selected.currentTime = 0;
     setActive(index);
     setInterlude(false);
-    setAutoplayBlocked(false);
+    setNeedsPlayGesture(false);
   };
 
   const toggleSound = () => {
     const nextMuted = !muted;
     setMuted(nextMuted);
-    setAutoplayBlocked(false);
     const current = videoRefs.current[active];
     if (current) {
       current.muted = nextMuted;
       current.volume = 0.12;
-      if (!interlude && heroMostlyVisible) void current.play();
+      if (!interlude && heroMostlyVisible) void attemptPlayback(current);
     }
+  };
+
+  const playFromGesture = () => {
+    const current = videoRefs.current[active];
+    if (!current) return;
+    void attemptPlayback(current, true);
   };
 
   return (
@@ -109,6 +171,12 @@ export function HeroCarousel() {
             playsInline
             autoPlay={index === 0}
             muted={muted}
+            {...wechatInlinePlaybackAttributes}
+            onCanPlay={(event) => {
+              if (index !== active || interlude || !heroMostlyVisible) return;
+              event.currentTarget.muted = muted;
+              void attemptPlayback(event.currentTarget);
+            }}
             onEnded={() => setInterlude(true)}
             aria-label={`${film.title}作品视频`}
           />
@@ -123,6 +191,13 @@ export function HeroCarousel() {
       </div>
       <div className="video-shade" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
+
+      {needsPlayGesture && !interlude && (
+        <button className="hero-play-fallback" type="button" onClick={playFromGesture} aria-label="播放首页视频">
+          <span aria-hidden="true"><i /></span>
+          <small>点击播放</small>
+        </button>
+      )}
 
       <div className={interlude ? "film-caption is-hidden" : "film-caption"} aria-live="polite">
         <p>{String(active + 1).padStart(2, "0")} / {String(films.length).padStart(2, "0")}</p>
@@ -152,7 +227,7 @@ export function HeroCarousel() {
         </div>
         <button className="sound-control" type="button" onClick={toggleSound} aria-label={muted ? "打开声音" : "静音"}>
           <span className={muted ? "sound-bars is-muted" : "sound-bars"} aria-hidden="true"><i /><i /><i /></span>
-          <span>{muted ? (autoplayBlocked ? "点击开启声音" : "声音已关闭") : "音量 · 12%"}</span>
+          <span>{muted ? (needsPlayGesture ? "点击播放视频" : "声音已关闭") : "音量 · 12%"}</span>
         </button>
       </div>
     </section>
