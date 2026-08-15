@@ -19,11 +19,10 @@ export function HeroCarousel() {
   const [active, setActive] = useState(0);
   // Mobile browsers only permit reliable autoplay when media starts muted.
   const [muted, setMuted] = useState(true);
-  const [needsPlayGesture, setNeedsPlayGesture] = useState(false);
   const [interlude, setInterlude] = useState(false);
   const [heroMostlyVisible, setHeroMostlyVisible] = useState(true);
   const heroRef = useRef<HTMLElement | null>(null);
-  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const attemptPlayback = useCallback(async (video: HTMLVideoElement, forceMuted = false) => {
     video.volume = 0.12;
@@ -35,7 +34,6 @@ export function HeroCarousel() {
 
     try {
       await video.play();
-      setNeedsPlayGesture(false);
       return;
     } catch {
       if (!video.muted) {
@@ -44,13 +42,11 @@ export function HeroCarousel() {
         setMuted(true);
         try {
           await video.play();
-          setNeedsPlayGesture(false);
           return;
         } catch {
-          // Some WeChat WebViews still require a real touch gesture.
+          // Some WeChat WebViews still block autoplay at the system level.
         }
       }
-      setNeedsPlayGesture(true);
     }
   }, []);
 
@@ -66,23 +62,16 @@ export function HeroCarousel() {
   }, []);
 
   useEffect(() => {
-    videoRefs.current.forEach((video) => {
-      if (!video) return;
-      video.volume = 0.12;
-      video.muted = muted;
-    });
+    const video = videoRef.current;
+    if (!video) return;
+    video.volume = 0.12;
+    video.muted = muted;
+    if (muted) video.setAttribute("muted", "");
+    else video.removeAttribute("muted");
   }, [muted]);
 
   useEffect(() => {
-    videoRefs.current.forEach((video, index) => {
-      if (!video) return;
-      if (index === active) video.currentTime = 0;
-      else video.pause();
-    });
-  }, [active]);
-
-  useEffect(() => {
-    const current = videoRefs.current[active];
+    const current = videoRef.current;
     if (!current) return;
 
     if (interlude || !heroMostlyVisible) {
@@ -92,15 +81,11 @@ export function HeroCarousel() {
 
     current.muted = muted;
     void attemptPlayback(current);
-    const fallbackTimer = window.setTimeout(() => {
-      if (current.paused && !interlude && heroMostlyVisible) setNeedsPlayGesture(true);
-    }, 2200);
-    return () => window.clearTimeout(fallbackTimer);
   }, [active, attemptPlayback, heroMostlyVisible, interlude, muted]);
 
   useEffect(() => {
     const resumeAfterWeChatReady = () => {
-      const current = videoRefs.current[active];
+      const current = videoRef.current;
       if (!current || interlude || !heroMostlyVisible) return;
       void attemptPlayback(current, true);
     };
@@ -111,39 +96,55 @@ export function HeroCarousel() {
   }, [active, attemptPlayback, heroMostlyVisible, interlude]);
 
   useEffect(() => {
-    if (!needsPlayGesture) return;
     const resumeOnFirstTouch = () => {
-      const current = videoRefs.current[active];
+      const current = videoRef.current;
       if (!current || interlude || !heroMostlyVisible) return;
       void attemptPlayback(current, true);
     };
 
     document.addEventListener("touchstart", resumeOnFirstTouch, { once: true, passive: true });
     return () => document.removeEventListener("touchstart", resumeOnFirstTouch);
-  }, [active, attemptPlayback, heroMostlyVisible, interlude, needsPlayGesture]);
+  }, [active, attemptPlayback, heroMostlyVisible, interlude]);
+
+  useEffect(() => {
+    const resumeVisibleVideo = () => {
+      const current = videoRef.current;
+      if (!current || interlude || !heroMostlyVisible || document.visibilityState === "hidden") return;
+      void attemptPlayback(current);
+    };
+    const resumeAfterVisibilityChange = () => {
+      if (document.visibilityState === "visible") resumeVisibleVideo();
+    };
+
+    window.addEventListener("pageshow", resumeVisibleVideo);
+    window.addEventListener("focus", resumeVisibleVideo);
+    document.addEventListener("visibilitychange", resumeAfterVisibilityChange);
+    return () => {
+      window.removeEventListener("pageshow", resumeVisibleVideo);
+      window.removeEventListener("focus", resumeVisibleVideo);
+      document.removeEventListener("visibilitychange", resumeAfterVisibilityChange);
+    };
+  }, [active, attemptPlayback, heroMostlyVisible, interlude]);
 
   useEffect(() => {
     if (!interlude) return;
     const timer = window.setTimeout(() => {
       setActive((current) => (current + 1) % films.length);
       setInterlude(false);
-      setNeedsPlayGesture(false);
     }, 5000);
     return () => window.clearTimeout(timer);
   }, [interlude]);
 
   const chooseFilm = (index: number) => {
-    const selected = videoRefs.current[index];
-    if (selected) selected.currentTime = 0;
+    if (index === active && videoRef.current) videoRef.current.currentTime = 0;
     setActive(index);
     setInterlude(false);
-    setNeedsPlayGesture(false);
   };
 
   const toggleSound = () => {
     const nextMuted = !muted;
     setMuted(nextMuted);
-    const current = videoRefs.current[active];
+    const current = videoRef.current;
     if (current) {
       current.muted = nextMuted;
       current.volume = 0.12;
@@ -151,36 +152,45 @@ export function HeroCarousel() {
     }
   };
 
-  const playFromGesture = () => {
-    const current = videoRefs.current[active];
-    if (!current) return;
-    void attemptPlayback(current, true);
+  const currentFilm = films[active];
+
+  const resumeWhenReady = (video: HTMLVideoElement) => {
+    if (interlude || !heroMostlyVisible) return;
+    video.muted = muted;
+    void attemptPlayback(video);
   };
 
   return (
     <section ref={heroRef} className="hero" id="top" aria-label="沃野香田作品视频轮播">
       <div className="video-stage">
-        {films.map((film, index) => (
-          <video
-            key={film.src}
-            ref={(node) => { videoRefs.current[index] = node; }}
-            className={index === active && !interlude ? "hero-video is-active" : "hero-video"}
-            src={film.src}
-            poster="/hero-wild-field.png"
-            preload={index === active ? "auto" : "metadata"}
-            playsInline
-            autoPlay={index === 0}
-            muted={muted}
-            {...wechatInlinePlaybackAttributes}
-            onCanPlay={(event) => {
-              if (index !== active || interlude || !heroMostlyVisible) return;
-              event.currentTarget.muted = muted;
-              void attemptPlayback(event.currentTarget);
-            }}
-            onEnded={() => setInterlude(true)}
-            aria-label={`${film.title}作品视频`}
-          />
-        ))}
+        <video
+          key={currentFilm.src}
+          ref={(node) => {
+            videoRef.current = node;
+            if (!node) return;
+            node.autoplay = true;
+            node.defaultMuted = true;
+            node.muted = muted;
+            node.volume = 0.12;
+            node.setAttribute("autoplay", "");
+            node.setAttribute("playsinline", "");
+            node.setAttribute("webkit-playsinline", "true");
+            if (muted) node.setAttribute("muted", "");
+          }}
+          className={!interlude ? "hero-video is-active" : "hero-video"}
+          src={currentFilm.src}
+          poster="/hero-wild-field.png"
+          preload="auto"
+          playsInline
+          autoPlay
+          muted={muted}
+          {...wechatInlinePlaybackAttributes}
+          onLoadedMetadata={(event) => resumeWhenReady(event.currentTarget)}
+          onLoadedData={(event) => resumeWhenReady(event.currentTarget)}
+          onCanPlay={(event) => resumeWhenReady(event.currentTarget)}
+          onEnded={() => setInterlude(true)}
+          aria-label={`${currentFilm.title}作品视频`}
+        />
         <div className={interlude ? "brand-interlude is-active" : "brand-interlude"} aria-hidden={!interlude}>
           <div>
             <p>WILD FIELD STUDIO</p>
@@ -191,13 +201,6 @@ export function HeroCarousel() {
       </div>
       <div className="video-shade" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
-
-      {needsPlayGesture && !interlude && (
-        <button className="hero-play-fallback" type="button" onClick={playFromGesture} aria-label="播放首页视频">
-          <span aria-hidden="true"><i /></span>
-          <small>点击播放</small>
-        </button>
-      )}
 
       <div className={interlude ? "film-caption is-hidden" : "film-caption"} aria-live="polite">
         <p>{String(active + 1).padStart(2, "0")} / {String(films.length).padStart(2, "0")}</p>
@@ -227,7 +230,7 @@ export function HeroCarousel() {
         </div>
         <button className="sound-control" type="button" onClick={toggleSound} aria-label={muted ? "打开声音" : "静音"}>
           <span className={muted ? "sound-bars is-muted" : "sound-bars"} aria-hidden="true"><i /><i /><i /></span>
-          <span>{muted ? (needsPlayGesture ? "点击播放视频" : "声音已关闭") : "音量 · 12%"}</span>
+          <span>{muted ? "声音已关闭" : "音量 · 12%"}</span>
         </button>
       </div>
     </section>
