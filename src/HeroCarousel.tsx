@@ -17,36 +17,22 @@ const wechatInlinePlaybackAttributes = {
 
 export function HeroCarousel() {
   const [active, setActive] = useState(0);
-  // Mobile browsers only permit reliable autoplay when media starts muted.
-  const [muted, setMuted] = useState(true);
+  // Start with low-volume sound; blocked browsers fall back to the play control.
+  const [muted, setMuted] = useState(false);
+  const [needsPlayGesture, setNeedsPlayGesture] = useState(false);
   const [interlude, setInterlude] = useState(false);
   const [heroMostlyVisible, setHeroMostlyVisible] = useState(true);
   const heroRef = useRef<HTMLElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const attemptPlayback = useCallback(async (video: HTMLVideoElement, forceMuted = false) => {
+  const attemptPlayback = useCallback(async (video: HTMLVideoElement) => {
     video.volume = 0.12;
-    if (forceMuted) {
-      video.muted = true;
-      video.setAttribute("muted", "");
-      setMuted(true);
-    }
 
     try {
       await video.play();
-      return;
+      setNeedsPlayGesture(false);
     } catch {
-      if (!video.muted) {
-        video.muted = true;
-        video.setAttribute("muted", "");
-        setMuted(true);
-        try {
-          await video.play();
-          return;
-        } catch {
-          // Some WeChat WebViews still block autoplay at the system level.
-        }
-      }
+      setNeedsPlayGesture(true);
     }
   }, []);
 
@@ -95,12 +81,12 @@ export function HeroCarousel() {
 
       if (bridge?.invoke) {
         bridge.invoke("getNetworkType", {}, () => {
-          void attemptPlayback(current, true);
+          void attemptPlayback(current);
         });
         return;
       }
 
-      void attemptPlayback(current, true);
+      void attemptPlayback(current);
     };
 
     document.addEventListener("WeixinJSBridgeReady", resumeAfterWeChatReady);
@@ -112,7 +98,7 @@ export function HeroCarousel() {
     const resumeOnFirstTouch = () => {
       const current = videoRef.current;
       if (!current || interlude || !heroMostlyVisible) return;
-      void attemptPlayback(current, true);
+      void attemptPlayback(current);
     };
 
     document.addEventListener("touchstart", resumeOnFirstTouch, { once: true, passive: true });
@@ -144,6 +130,7 @@ export function HeroCarousel() {
     const timer = window.setTimeout(() => {
       setActive((current) => (current + 1) % films.length);
       setInterlude(false);
+      setNeedsPlayGesture(false);
     }, 5000);
     return () => window.clearTimeout(timer);
   }, [interlude]);
@@ -152,6 +139,7 @@ export function HeroCarousel() {
     if (index === active && videoRef.current) videoRef.current.currentTime = 0;
     setActive(index);
     setInterlude(false);
+    setNeedsPlayGesture(false);
   };
 
   const toggleSound = () => {
@@ -163,6 +151,14 @@ export function HeroCarousel() {
       current.volume = 0.12;
       if (!interlude && heroMostlyVisible) void attemptPlayback(current);
     }
+  };
+
+  const playFromGesture = () => {
+    const current = videoRef.current;
+    if (!current) return;
+    current.muted = muted;
+    current.volume = 0.12;
+    void attemptPlayback(current);
   };
 
   const currentFilm = films[active];
@@ -182,13 +178,14 @@ export function HeroCarousel() {
             videoRef.current = node;
             if (!node) return;
             node.autoplay = true;
-            node.defaultMuted = true;
+            node.defaultMuted = muted;
             node.muted = muted;
             node.volume = 0.12;
             node.setAttribute("autoplay", "");
             node.setAttribute("playsinline", "");
             node.setAttribute("webkit-playsinline", "true");
             if (muted) node.setAttribute("muted", "");
+            else node.removeAttribute("muted");
           }}
           className={!interlude ? "hero-video is-active" : "hero-video"}
           src={currentFilm.src}
@@ -201,7 +198,11 @@ export function HeroCarousel() {
           onLoadedMetadata={(event) => resumeWhenReady(event.currentTarget)}
           onLoadedData={(event) => resumeWhenReady(event.currentTarget)}
           onCanPlay={(event) => resumeWhenReady(event.currentTarget)}
-          onEnded={() => setInterlude(true)}
+          onPlaying={() => setNeedsPlayGesture(false)}
+          onEnded={() => {
+            setNeedsPlayGesture(false);
+            setInterlude(true);
+          }}
           aria-label={`${currentFilm.title}作品视频`}
         />
         <div className={interlude ? "brand-interlude is-active" : "brand-interlude"} aria-hidden={!interlude}>
@@ -214,6 +215,13 @@ export function HeroCarousel() {
       </div>
       <div className="video-shade" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
+
+      {needsPlayGesture && !interlude && (
+        <button className="hero-play-fallback" type="button" onClick={playFromGesture} aria-label="有声播放首页视频">
+          <span aria-hidden="true"><i /></span>
+          <small>点击播放 · 有声</small>
+        </button>
+      )}
 
       <div className={interlude ? "film-caption is-hidden" : "film-caption"} aria-live="polite">
         <p>{String(active + 1).padStart(2, "0")} / {String(films.length).padStart(2, "0")}</p>
