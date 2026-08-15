@@ -17,7 +17,7 @@ const wechatInlinePlaybackAttributes = {
 
 export function HeroCarousel() {
   const [active, setActive] = useState(0);
-  // Start with low-volume sound; blocked browsers fall back to the play control.
+  // Prefer low-volume sound, then fall back to muted autoplay before showing a play control.
   const [muted, setMuted] = useState(false);
   const [needsPlayGesture, setNeedsPlayGesture] = useState(false);
   const [interlude, setInterlude] = useState(false);
@@ -32,6 +32,19 @@ export function HeroCarousel() {
       await video.play();
       setNeedsPlayGesture(false);
     } catch {
+      if (!video.muted) {
+        video.muted = true;
+        video.setAttribute("muted", "");
+        try {
+          await video.play();
+          setMuted(true);
+          setNeedsPlayGesture(false);
+          return;
+        } catch {
+          video.muted = false;
+          video.removeAttribute("muted");
+        }
+      }
       setNeedsPlayGesture(true);
     }
   }, []);
@@ -156,8 +169,10 @@ export function HeroCarousel() {
   const playFromGesture = () => {
     const current = videoRef.current;
     if (!current) return;
-    current.muted = muted;
+    current.muted = false;
+    current.removeAttribute("muted");
     current.volume = 0.12;
+    setMuted(false);
     void attemptPlayback(current);
   };
 
