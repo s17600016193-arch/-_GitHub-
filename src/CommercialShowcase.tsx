@@ -1,28 +1,67 @@
-const formats = [
-  {
-    no: "01",
-    title: "品牌故事",
-    en: "BRAND STORY",
-    description: "从品牌精神出发，把一句主张写成有情绪、有角色、有记忆点的短篇故事。",
-    meta: "30—120 SEC · 16:9 / 9:16",
-  },
-  {
-    no: "02",
-    title: "产品叙事",
-    en: "PRODUCT NARRATIVE",
-    description: "让产品进入真实情境，用视觉节奏与人物关系完成自然、有说服力的表达。",
-    meta: "15—90 SEC · SOCIAL / CAMPAIGN",
-  },
-  {
-    no: "03",
-    title: "社交短片",
-    en: "SOCIAL SHORTS",
-    description: "为手机屏幕设计开场、节奏与反转，让内容在最短时间里抓住注意力。",
-    meta: "6—60 SEC · 9:16 FIRST",
-  },
+"use client";
+
+import { useEffect, useState } from "react";
+
+type AdWork = {
+  no: string;
+  title: string;
+  en: string;
+  duration: string;
+  src: string;
+  poster: string;
+};
+
+const adWorks: AdWork[] = [
+  { no: "A01", title: "变脸", en: "BIAN LIAN", duration: "00:28", src: "/ads/videos/bian-lian.mp4", poster: "/ads/posters/bian-lian.jpg" },
+  { no: "A02", title: "佛女", en: "FO NV", duration: "00:29", src: "/ads/videos/fo-nv.mp4", poster: "/ads/posters/fo-nv.jpg" },
+  { no: "A03", title: "水墨", en: "SHUI MO", duration: "00:33", src: "/ads/videos/shui-mo.mp4", poster: "/ads/posters/shui-mo.jpg" },
+  { no: "A04", title: "游览", en: "YOU LAN", duration: "00:28", src: "/ads/videos/you-lan.mp4", poster: "/ads/posters/you-lan.jpg" },
 ];
 
+const services = [
+  ["01", "品牌故事", "BRAND STORY"],
+  ["02", "产品叙事", "PRODUCT NARRATIVE"],
+  ["03", "社交短片", "SOCIAL SHORTS"],
+];
+
+function AdCard({ work, onOpen }: { work: AdWork; onOpen: () => void }) {
+  return (
+    <article className="commercial-case">
+      <button type="button" onClick={onOpen} aria-label={`播放广告短篇《${work.title}》`}>
+        <span className="commercial-case-media">
+          <img src={work.poster} alt={`${work.title}广告短篇海报`} loading="lazy" />
+          <span className="commercial-case-shade" aria-hidden="true" />
+          <span className="commercial-case-index">{work.no}</span>
+          <span className="play-glyph" aria-hidden="true"><i /></span>
+          <span className="commercial-case-play">点击播放 <i>PLAY FILM</i></span>
+        </span>
+        <span className="commercial-case-info">
+          <span><strong>{work.title}</strong><small>{work.en}</small></span>
+          <small>广告短篇 · {work.duration}</small>
+          <span aria-hidden="true">↗</span>
+        </span>
+      </button>
+    </article>
+  );
+}
+
 export function CommercialShowcase() {
+  const [selected, setSelected] = useState<AdWork | null>(null);
+
+  useEffect(() => {
+    if (!selected) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelected(null);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selected]);
+
   return (
     <section className="commercial" id="commercial">
       <div className="commercial-heading">
@@ -40,23 +79,34 @@ export function CommercialShowcase() {
         </div>
       </div>
 
-      <div className="commercial-formats" aria-label="广告短篇服务类型">
-        {formats.map((format) => (
-          <article key={format.no}>
-            <div className="commercial-card-head">
-              <span>{format.no}</span>
-              <small>{format.en}</small>
-            </div>
-            <h3>{format.title}</h3>
-            <p>{format.description}</p>
-            <small className="commercial-meta">{format.meta}</small>
-          </article>
+      <div className="commercial-gallery">
+        {adWorks.map((work) => (
+          <AdCard key={work.src} work={work} onOpen={() => setSelected(work)} />
+        ))}
+      </div>
+
+      <div className="commercial-services" aria-label="广告短篇服务类型">
+        {services.map(([no, title, en]) => (
+          <div key={no}><span>{no}</span><strong>{title}</strong><small>{en}</small></div>
         ))}
       </div>
 
       <div className="commercial-ribbon" aria-hidden="true">
         <span>STRATEGY</span><i>×</i><span>WRITING</span><i>×</i><span>VISUAL</span><i>×</i><span>PRODUCTION</span>
       </div>
+
+      {selected && (
+        <div className="player-modal" role="dialog" aria-modal="true" aria-labelledby="commercial-player-title" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
+          <div className="player-topline">
+            <div><span>{selected.no}</span><h3 id="commercial-player-title">{selected.title}</h3><p>{selected.en}</p></div>
+            <button type="button" onClick={() => setSelected(null)} aria-label="关闭视频">关闭 <i>×</i></button>
+          </div>
+          <div className="player-frame">
+            <video key={selected.src} src={selected.src} poster={selected.poster} controls autoPlay playsInline onLoadedMetadata={(event) => { event.currentTarget.volume = 0.35; }} />
+          </div>
+          <p className="player-hint">ESC 关闭 · 使用播放器控制声音与进度</p>
+        </div>
+      )}
     </section>
   );
 }
