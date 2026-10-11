@@ -13,12 +13,12 @@ type AdWork = {
 };
 
 const adWorks: AdWork[] = [
-  { no: "A01", title: "变脸", en: "BIAN LIAN", duration: "00:28", src: "/ads/videos/bian-lian.mp4", poster: "/ads/posters/bian-lian.jpg", orientation: "landscape" },
-  { no: "A02", title: "佛女", en: "FO NV", duration: "00:29", src: "/ads/videos/fo-nv.mp4", poster: "/ads/posters/fo-nv.jpg", orientation: "landscape" },
-  { no: "A03", title: "水墨", en: "SHUI MO", duration: "00:33", src: "/ads/videos/shui-mo.mp4", poster: "/ads/posters/shui-mo.jpg", orientation: "landscape" },
-  { no: "A04", title: "游览", en: "YOU LAN", duration: "00:28", src: "/ads/videos/you-lan.mp4", poster: "/ads/posters/you-lan.jpg", orientation: "landscape" },
+  { no: "A01", title: "蜀风雅韵", en: "ELEGANCE OF SHU", duration: "00:28", src: "/ads/videos/bian-lian.mp4", poster: "/ads/posters/bian-lian.jpg", orientation: "landscape" },
+  { no: "A02", title: "佛前舞", en: "DANCE BEFORE BUDDHA", duration: "00:29", src: "/ads/videos/fo-nv.mp4", poster: "/ads/posters/fo-nv.jpg", orientation: "landscape" },
+  { no: "A03", title: "九寨墨韵", en: "JIUZHAI IN INK", duration: "00:33", src: "/ads/videos/shui-mo.mp4", poster: "/ads/posters/shui-mo.jpg", orientation: "landscape" },
+  { no: "A04", title: "慢时光", en: "SLOW MOMENTS", duration: "00:28", src: "/ads/videos/you-lan.mp4", poster: "/ads/posters/you-lan.jpg", orientation: "landscape" },
   { no: "A05", title: "国发·光启", en: "GUOFA · GUANGQI", duration: "00:31", src: "/ads/videos/guo-fa-guang-qi.mp4", poster: "/ads/posters/guo-fa-guang-qi.jpg", orientation: "landscape" },
-  { no: "A06", title: "四川版", en: "SICHUAN EDITION", duration: "00:30", src: "/ads/videos/si-chuan-ban.mp4", poster: "/ads/posters/si-chuan-ban.jpg", orientation: "portrait" },
+  { no: "A06", title: "墨迹天气 火锅版", en: "MOJI WEATHER · HOTPOT EDITION", duration: "00:30", src: "/ads/videos/si-chuan-ban.mp4", poster: "/ads/posters/si-chuan-ban.jpg", orientation: "portrait" },
 ];
 
 const services = [
