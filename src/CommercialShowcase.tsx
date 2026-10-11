@@ -9,13 +9,16 @@ type AdWork = {
   duration: string;
   src: string;
   poster: string;
+  orientation: "landscape" | "portrait";
 };
 
 const adWorks: AdWork[] = [
-  { no: "A01", title: "变脸", en: "BIAN LIAN", duration: "00:28", src: "/ads/videos/bian-lian.mp4", poster: "/ads/posters/bian-lian.jpg" },
-  { no: "A02", title: "佛女", en: "FO NV", duration: "00:29", src: "/ads/videos/fo-nv.mp4", poster: "/ads/posters/fo-nv.jpg" },
-  { no: "A03", title: "水墨", en: "SHUI MO", duration: "00:33", src: "/ads/videos/shui-mo.mp4", poster: "/ads/posters/shui-mo.jpg" },
-  { no: "A04", title: "游览", en: "YOU LAN", duration: "00:28", src: "/ads/videos/you-lan.mp4", poster: "/ads/posters/you-lan.jpg" },
+  { no: "A01", title: "变脸", en: "BIAN LIAN", duration: "00:28", src: "/ads/videos/bian-lian.mp4", poster: "/ads/posters/bian-lian.jpg", orientation: "landscape" },
+  { no: "A02", title: "佛女", en: "FO NV", duration: "00:29", src: "/ads/videos/fo-nv.mp4", poster: "/ads/posters/fo-nv.jpg", orientation: "landscape" },
+  { no: "A03", title: "水墨", en: "SHUI MO", duration: "00:33", src: "/ads/videos/shui-mo.mp4", poster: "/ads/posters/shui-mo.jpg", orientation: "landscape" },
+  { no: "A04", title: "游览", en: "YOU LAN", duration: "00:28", src: "/ads/videos/you-lan.mp4", poster: "/ads/posters/you-lan.jpg", orientation: "landscape" },
+  { no: "A05", title: "国发·光启", en: "GUOFA · GUANGQI", duration: "00:31", src: "/ads/videos/guo-fa-guang-qi.mp4", poster: "/ads/posters/guo-fa-guang-qi.jpg", orientation: "landscape" },
+  { no: "A06", title: "四川版", en: "SICHUAN EDITION", duration: "00:30", src: "/ads/videos/si-chuan-ban.mp4", poster: "/ads/posters/si-chuan-ban.jpg", orientation: "portrait" },
 ];
 
 const services = [
@@ -26,7 +29,7 @@ const services = [
 
 function AdCard({ work, onOpen }: { work: AdWork; onOpen: () => void }) {
   return (
-    <article className="commercial-case">
+    <article className={`commercial-case is-${work.orientation}`}>
       <button type="button" onClick={onOpen} aria-label={`播放广告短篇《${work.title}》`}>
         <span className="commercial-case-media">
           <img src={work.poster} alt={`${work.title}广告短篇海报`} loading="lazy" />
@@ -101,7 +104,7 @@ export function CommercialShowcase() {
             <div><span>{selected.no}</span><h3 id="commercial-player-title">{selected.title}</h3><p>{selected.en}</p></div>
             <button type="button" onClick={() => setSelected(null)} aria-label="关闭视频">关闭 <i>×</i></button>
           </div>
-          <div className="player-frame">
+          <div className={`player-frame is-${selected.orientation}`}>
             <video key={selected.src} src={selected.src} poster={selected.poster} controls autoPlay playsInline onLoadedMetadata={(event) => { event.currentTarget.volume = 0.35; }} />
           </div>
           <p className="player-hint">ESC 关闭 · 使用播放器控制声音与进度</p>
