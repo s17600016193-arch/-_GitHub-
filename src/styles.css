@@ -134,6 +134,32 @@ main { overflow: hidden; }
 .player-hint { position: absolute; bottom: 18px; margin: 0; font-size: 8px; letter-spacing: .18em; opacity: .45; }
 @keyframes playerIn { from { opacity: 0; } to { opacity: 1; } }
 
+.commercial { position: relative; overflow: hidden; padding: 9vw 7vw 5vw; background: #24301e; color: var(--paper); }
+.commercial::before { content: "COMMERCIAL"; position: absolute; top: -2.5vw; right: -1vw; color: rgba(239,238,232,.035); font-size: 17vw; font-weight: 700; letter-spacing: -.08em; line-height: 1; pointer-events: none; }
+.commercial-heading { position: relative; display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 2vw; border-bottom: 1px solid rgba(239,238,232,.28); }
+.commercial-heading > p { margin: 0; }
+.commercial-heading > p:last-child { text-align: right; font-size: 8px; line-height: 1.7; letter-spacing: .24em; opacity: .55; }
+.commercial-intro { position: relative; display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, .85fr); gap: 7vw; align-items: end; padding: 7vw 0 8vw; }
+.commercial-intro h2 { margin: 0; font-family: "STSong", "SimSun", serif; font-size: clamp(70px, 10.2vw, 158px); font-weight: 400; line-height: .82; letter-spacing: -.085em; }
+.commercial-intro h2 span { display: block; }
+.commercial-intro h2 span:last-child { margin-left: .72em; color: var(--acid); }
+.commercial-copy { padding-left: 3vw; border-left: 1px solid rgba(239,238,232,.28); }
+.commercial-copy > p { margin: 0; font-family: "STSong", "SimSun", serif; font-size: clamp(17px, 1.6vw, 24px); line-height: 1.75; }
+.commercial-copy > a { margin-top: 3.5vw; width: 100%; padding: 17px 0; border-top: 1px solid rgba(239,238,232,.4); border-bottom: 1px solid rgba(239,238,232,.4); display: flex; justify-content: space-between; align-items: center; font-size: 11px; letter-spacing: .14em; transition: color .25s, padding .25s; }
+.commercial-copy > a i { color: var(--acid); font-size: 22px; font-style: normal; }
+.commercial-copy > a:hover { color: var(--acid); padding-left: 10px; padding-right: 10px; }
+.commercial-formats { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid rgba(239,238,232,.28); border-bottom: 1px solid rgba(239,238,232,.28); }
+.commercial-formats article { min-height: 360px; padding: 27px 2.4vw 30px; border-right: 1px solid rgba(239,238,232,.28); display: flex; flex-direction: column; transition: background .35s, color .35s; }
+.commercial-formats article:first-child { border-left: 1px solid rgba(239,238,232,.28); }
+.commercial-formats article:hover { background: var(--acid); color: var(--ink); }
+.commercial-card-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 9px; }
+.commercial-card-head small { font-size: 7px; letter-spacing: .19em; opacity: .55; }
+.commercial-formats h3 { margin: auto 0 24px; font-family: "STSong", "SimSun", serif; font-size: clamp(33px, 3.3vw, 52px); font-weight: 400; letter-spacing: -.04em; }
+.commercial-formats article > p { min-height: 5.4em; margin: 0; max-width: 330px; font-size: 12px; line-height: 1.8; opacity: .72; }
+.commercial-meta { margin-top: 28px; padding-top: 15px; border-top: 1px solid currentColor; font-size: 7px; letter-spacing: .15em; opacity: .55; }
+.commercial-ribbon { margin: 4.5vw -7vw 0; padding: 17px 7vw; background: var(--acid); color: var(--ink); display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 8px; letter-spacing: .24em; white-space: nowrap; }
+.commercial-ribbon i { font-size: 18px; font-style: normal; font-weight: 300; }
+
 .studio { padding: 10vw 7vw 8vw; }
 .studio-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .studio-lead { font-family: "STSong", "SimSun", serif; font-size: clamp(20px, 2vw, 30px); line-height: 1.6; margin: 0; width: 47%; }
@@ -202,6 +228,22 @@ footer { background: var(--acid); padding: 8vw 4vw 2vw; }
   .player-frame { width: calc(100vw - 24px); }
   .player-frame.is-portrait { width: min(calc(100vw - 44px), 430px); max-height: 78vh; }
   .player-hint { bottom: 14px; }
+  .commercial { padding: 90px 20px 0; }
+  .commercial::before { top: 20px; right: -4px; font-size: 24vw; }
+  .commercial-heading { padding-bottom: 18px; }
+  .commercial-heading > p:last-child { display: none; }
+  .commercial-intro { display: block; padding: 74px 0 80px; }
+  .commercial-intro h2 { font-size: 18vw; }
+  .commercial-intro h2 span:last-child { margin-left: 0; }
+  .commercial-copy { margin-top: 65px; padding: 0; border-left: 0; }
+  .commercial-copy > p { font-size: 19px; }
+  .commercial-copy > a { margin-top: 45px; }
+  .commercial-formats { display: block; }
+  .commercial-formats article, .commercial-formats article:first-child { min-height: 285px; padding: 24px 4px 25px; border-left: 0; border-right: 0; border-bottom: 1px solid rgba(239,238,232,.28); }
+  .commercial-formats h3 { margin: 80px 0 20px; font-size: 42px; }
+  .commercial-formats article > p { min-height: auto; max-width: 440px; }
+  .commercial-ribbon { margin: 0 -20px; padding: 16px 20px; overflow: hidden; }
+  .commercial-ribbon span:nth-of-type(even), .commercial-ribbon i:nth-of-type(even) { display: none; }
   .studio { padding: 100px 22px 60px; }
   .studio-top { display: block; }
   .studio-lead { width: auto; margin-top: 50px; }

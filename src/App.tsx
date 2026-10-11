@@ -1,5 +1,6 @@
 import { HeroCarousel } from "./HeroCarousel";
 import { WorkShowcase } from "./WorkShowcase";
+import { CommercialShowcase } from "./CommercialShowcase";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
         </a>
         <nav className="desktop-nav" aria-label="主导航">
           <a href="#work">作品</a>
+          <a href="#commercial">广告短篇</a>
           <a href="#studio">我们</a>
           <a href="#contact">联系</a>
         </nav>
@@ -18,6 +20,7 @@ export default function Home() {
           <summary aria-label="打开菜单"><span>菜单</span></summary>
           <nav aria-label="移动端导航">
             <a href="#work">作品 <small>WORK</small></a>
+            <a href="#commercial">广告短篇 <small>COMMERCIAL</small></a>
             <a href="#studio">我们 <small>STUDIO</small></a>
             <a href="#contact">联系 <small>CONTACT</small></a>
           </nav>
@@ -44,9 +47,11 @@ export default function Home() {
         <WorkShowcase />
       </section>
 
+      <CommercialShowcase />
+
       <section className="studio" id="studio">
         <div className="studio-top">
-          <p className="section-index">03 / 沃野香田</p>
+          <p className="section-index">04 / 沃野香田</p>
           <p className="studio-lead">一家专注原创漫剧与IP内容的<br />叙事创作公司。</p>
         </div>
         <div className="studio-statement">
